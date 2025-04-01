@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All-in-One Web Projects</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; }
+        #menu { margin-bottom: 20px; }
+        button { margin: 5px; padding: 10px; cursor: pointer; font-size: 16px; }
+        .project { display: none; margin-top: 20px; }
+        canvas, div { margin-top: 10px; }
+        #messages { border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>All-in-One Web Projects</h1>
+
+    <div id="menu">
+        <button onclick="showProject('resumeAnalyzer')">Resume Analyzer</button>
+        <button onclick="showProject('productShowcase')">3D Product Showcase</button>
+        <button onclick="showProject('chatbot')">AI Chatbot</button>
+        <button onclick="showProject('whiteboard')">Whiteboard</button>
+        <button onclick="showProject('visualizer')">Music Visualizer</button>
+    </div>
+
+    <!-- Resume Analyzer -->
+    <div id="resumeAnalyzer" class="project">
+        <h2>Upload Your Resume</h2>
+        <input type="file">
+        <button>Analyze</button>
+        <div>Analysis: Strong skills in JavaScript, HTML, and CSS.</div>
+    </div>
+
+    <!-- 3D Product Showcase -->
+    <div id="productShowcase" class="project">
+        <h2>3D Product Showcase</h2>
+        <script>
+            let scene = new THREE.Scene();
+            let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            let renderer = new THREE.WebGLRenderer();
+            renderer.setSize(400, 300);
+            let div = document.createElement("div");
+            div.appendChild(renderer.domElement);
+            document.getElementById("productShowcase").appendChild(div);
+
+            let geometry = new THREE.BoxGeometry();
+            let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+            let cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+            camera.position.z = 5;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+                renderer.render(scene, camera);
+            }
+            animate();
+        </script>
+    </div>
+
+    <!-- AI Chatbot -->
+    <div id="chatbot" class="project">
+        <h2>AI Chatbot</h2>
+        <div id="messages"></div>
+        <input type="text" id="userInput" placeholder="Ask me anything...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <!-- Whiteboard -->
+    <div id="whiteboard" class="project">
+        <h2>Whiteboard</h2>
+        <canvas id="board" width="400" height="300" style="border:1px solid black;"></canvas>
+    </div>
+
+    <!-- Music Visualizer -->
+    <div id="visualizer" class="project">
+        <h2>Music Visualizer</h2>
+        <input type="file" id="audioFile">
+        <canvas id="musicCanvas" width="400" height="200" style="border:1px solid black;"></canvas>
+    </div>
+
+    <script>
+        function showProject(projectId) {
+            document.querySelectorAll('.project').forEach(p => p.style.display = 'none');
+            document.getElementById(projectId).style.display = 'block';
+        }
+
+        function sendMessage() {
+            let input = document.getElementById("userInput").value;
+            if (!input) return;
+            document.getElementById("messages").innerHTML += `<p>User: ${input}</p>`;
+            document.getElementById("messages").innerHTML += `<p>Bot: This is a basic chatbot response.</p>`;
+            document.getElementById("userInput").value = "";
+        }
+
+        let canvas = document.getElementById("board");
+        let ctx = canvas.getContext("2d");
+        let drawing = false;
+
+        canvas.addEventListener("mousedown", () => drawing = true);
+        canvas.addEventListener("mouseup", () => drawing = false);
+        canvas.addEventListener("mousemove", draw);
+
+        function draw(event) {
+            if (!drawing) return;
+            ctx.lineWidth = 5;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "black";
+            ctx.lineTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+        }
+
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let musicCanvas = document.getElementById("musicCanvas");
+        let musicCtx = musicCanvas.getContext("2d");
+
+        document.getElementById("audioFile").addEventListener("change", function(event) {
+            let file = event.target.files[0];
+            let reader = new FileReader();
+
+            reader.onload = function(e) {
+                let audio = new Audio(e.target.result);
+                let source = audioContext.createMediaElementSource(audio);
+                let analyser = audioContext.createAnalyser();
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+
+                function visualize() {
+                    requestAnimationFrame(visualize);
+                    let dataArray = new Uint8Array(analyser.frequencyBinCount);
+                    analyser.getByteFrequencyData(dataArray);
+                    musicCtx.clearRect(0, 0, musicCanvas.width, musicCanvas.height);
+                    for (let i = 0; i < dataArray.length; i++) {
+                        musicCtx.fillStyle = `rgb(${dataArray[i]},50,150)`;
+                        musicCtx.fillRect(i * 4, musicCanvas.height - dataArray[i], 3, dataArray[i]);
+                    }
+                }
+
+                audio.play();
+                visualize();
+            };
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>
